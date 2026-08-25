@@ -856,6 +856,26 @@
   });
 
   init();
-</script>
+</script// Storage polyfill: fallback ke localStorage bila window.storage tidak ada
+if (!window.storage) {
+  window.storage = {
+    async get(key, _unused) {
+      try {
+        const v = localStorage.getItem(key);
+        return { value: v };
+      } catch (e) {
+        return { value: null };
+      }
+    },
+    async set(key, value, _unused) {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+  };
+}>
 </body>
 </html>
