@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Untuk Kak Salsa</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.2/confetti.browser.min.js"></script>
 <style>
@@ -37,7 +37,6 @@
     position: relative;
   }
 
-  /* film grain overlay for texture */
   body::after{
     content:"";
     position: fixed;
@@ -49,7 +48,6 @@
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 
-  /* ---------- STARFIELD ---------- */
   #stars{
     position: fixed;
     inset: 0;
@@ -68,7 +66,6 @@
     50%{ opacity: 0.9; transform: scale(1.6); }
   }
 
-  /* ---------- DRIFTING LETTERS ---------- */
   .drift{
     position: fixed;
     top: 0; left: -8%;
@@ -91,7 +88,6 @@
     z-index: 2;
   }
 
-  /* ---------- HERO / AMPLOP ---------- */
   .hero{
     padding: 64px 0 30px;
     text-align: center;
@@ -318,7 +314,6 @@
   .divider .line{ height:1px; width: 70px; background: linear-gradient(90deg, transparent, currentColor, transparent); }
   .divider svg{ width: 12px; height:12px; }
 
-  /* ---------- SCROLL REVEAL ---------- */
   .reveal{
     opacity: 0;
     transform: translateY(26px);
@@ -326,7 +321,6 @@
   }
   .reveal.in-view{ opacity: 1; transform: translateY(0); }
 
-  /* ---------- FORM CARD ---------- */
   .card{
     background: linear-gradient(165deg, var(--parchment) 0%, var(--parchment-soft) 100%);
     border-radius: 16px;
@@ -439,7 +433,6 @@
     color: var(--ink);
   }
 
-  /* ---------- CORKBOARD / NOTES ---------- */
   .board-heading{
     margin: 50px 0 20px;
     display:flex;
@@ -558,6 +551,8 @@
     .reveal{ transition: none !important; opacity:1 !important; transform:none !important; }
   }
 </style>
+<!-- SUPABASE SDK (UMD) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -635,9 +630,23 @@
 </div>
 
 <script>
+  // CONFIG: Ganti nilai berikut dengan kredensial Supabase Anda
+  // Supabase: https://supabase.com — buat project lalu copy Project URL dan ANON PUBLIC KEY
+  const SUPABASE_URL = https://nupduhbcwcpxlydosazo.supabase.co; 
+  const SUPABASE_ANON_KEY = sb_publishable_kjkrBZuXcsu-1iRT_Cj__w_KDxziJUB; // 
+
+  // Jangan commit kunci sensitif lain selain ANON key. ANON key biasa dipakai di client.
   const MAX_MESSAGES = 25;
-  const STORAGE_KEY = 'messages';
   const RING_CIRC = 2 * Math.PI * 14;
+
+  // Inisialisasi client Supabase
+  let supabase = null;
+  try {
+    // UMD exposes `supabase` global with createClient()
+    supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (e) {
+    console.warn('Supabase client init failed (check SDK or keys).', e);
+  }
 
   const form = document.getElementById('msgForm');
   const namaInput = document.getElementById('nama');
@@ -652,7 +661,7 @@
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* -------- decorative: starfield -------- */
+  /* decorative */
   function buildStars(){
     const wrap = document.getElementById('stars');
     if (prefersReducedMotion) return;
@@ -669,10 +678,8 @@
     wrap.appendChild(frag);
   }
 
-  /* -------- decorative: drifting envelopes -------- */
   function buildDrifters(){
     if (prefersReducedMotion) return;
-    const icon = '<svg viewBox="0 0 24 24" fill="none" stroke="%23D9B36A"><rect x="2" y="4" width="20" height="16" rx="2" stroke="%23D9B36A" stroke-width="1.4"/><path d="M3 5l9 7 9-7" stroke="%23D9B36A" stroke-width="1.4"/></svg>';
     const count = 3;
     for (let i=0;i<count;i++){
       const d = document.createElement('div');
@@ -685,7 +692,6 @@
     }
   }
 
-  /* -------- decorative: envelope subtle tilt on pointer -------- */
   function attachTilt(){
     if (prefersReducedMotion) return;
     const hero = document.getElementById('heroSection');
@@ -701,7 +707,6 @@
     });
   }
 
-  /* -------- scroll reveal -------- */
   function attachReveal(){
     const els = document.querySelectorAll('.reveal');
     if (prefersReducedMotion || !('IntersectionObserver' in window)){
@@ -732,27 +737,105 @@
     }catch(e){ return ''; }
   }
 
+  // ---------------- Supabase-backed storage ----------------
+  // REQUIREMENTS (Supabase):
+  // 1) Buat table `messages` dengan kolom: id TEXT PK, nama TEXT, pesan TEXT, waktu TIMESTAMPTZ
+  //    contoh SQL:
+  //      CREATE TABLE messages (
+  //        id text PRIMARY KEY,
+  //        nama text,
+  //        pesan text,
+  //        waktu timestamptz DEFAULT now()
+  //      );
+  //
+  // 2) Pastikan anon key boleh melakukan SELECT dan INSERT:
+  //    - Jika Row Level Security (RLS) diaktifkan, tambahkan policy yang mengizinkan SELECT/INSERT untuk anon.
+  //    - Contoh policy (SQL) bila RLS on:
+  //      ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+  //      CREATE POLICY "anon_select" ON public.messages FOR SELECT USING (true);
+  //      CREATE POLICY "anon_insert" ON public.messages FOR INSERT WITH CHECK (true);
+  //
+  // Setelah setup, gantikan SUPABASE_URL dan SUPABASE_ANON_KEY di bagian atas file ini.
+
+  // Load all messages (newest first)
   async function loadMessages(){
-    try{
-      const result = await window.storage.get(STORAGE_KEY, true);
-      if (!result || !result.value) return [];
-      const parsed = JSON.parse(result.value);
-      return Array.isArray(parsed) ? parsed : [];
-    }catch(err){
+    if (!supabase) return [];
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('waktu', { ascending: false });
+      if (error){
+        console.error('loadMessages error', error);
+        return [];
+      }
+      return Array.isArray(data) ? data.map(r => ({ id: r.id, nama: r.nama, pesan: r.pesan, waktu: r.waktu })) : [];
+    } catch (err){
+      console.error(err);
       return [];
     }
   }
 
-  async function saveMessages(list){
-    await window.storage.set(STORAGE_KEY, JSON.stringify(list), true);
+  // Insert single message
+  async function insertMessage(entry){
+    if (!supabase) throw new Error('Supabase not initialized');
+    const { data, error } = await supabase
+      .from('messages')
+      .insert([{ id: entry.id, nama: entry.nama, pesan: entry.pesan, waktu: entry.waktu }]);
+    if (error) throw error;
+    return data;
   }
 
+  // Subscribe to realtime INSERTs so all clients update automatically
+  let realtimeSubscribed = false;
+  function subscribeRealtime() {
+    if (!supabase || realtimeSubscribed) return;
+    try {
+      supabase.channel('public:messages')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+          // payload.new contains the inserted row
+          if (payload && payload.new) {
+            // prepend new message to the board
+            addMessageToDOM(payload.new);
+            updateAfterChange();
+          }
+        })
+        .subscribe();
+      realtimeSubscribed = true;
+    } catch (e) {
+      console.warn('Realtime subscribe failed', e);
+    }
+  }
+
+  // DOM rendering helpers
   function updateRing(count){
     const pct = Math.min(count / MAX_MESSAGES, 1);
     const offset = RING_CIRC * (1 - pct);
     ringFill.setAttribute('stroke-dasharray', RING_CIRC.toFixed(2));
     ringFill.style.strokeDashoffset = offset.toFixed(2);
     ringLabel.textContent = count + ' dari ' + MAX_MESSAGES + ' pesan sudah ditulis';
+  }
+
+  function addMessageToDOM(item){
+    // Prepend a single message to the top of board
+    // Keep using same note styles; avoid duplicates by id
+    const existing = board.querySelector(`[data-id="${escapeHtml(item.id)}"]`);
+    if (existing) return;
+    const node = document.createElement('div');
+    node.className = 'note';
+    node.setAttribute('data-id', item.id);
+    node.innerHTML = `
+      <div class="pin"></div>
+      <p class="msg">${escapeHtml(item.pesan)}</p>
+      <div class="meta">
+        <span class="from">— ${escapeHtml(item.nama)}</span>
+        <span class="time">${formatWaktu(item.waktu)}</span>
+      </div>
+    `;
+    // insert at beginning and ensure grid layout: if empty-state exists remove it
+    const empty = board.querySelector('.empty-state, .loading-state');
+    if (empty) empty.remove();
+    board.insertBefore(node, board.firstChild);
   }
 
   function renderMessages(list){
@@ -766,7 +849,7 @@
 
     const sorted = [...list].sort((a,b) => new Date(b.waktu) - new Date(a.waktu));
     board.innerHTML = sorted.map(item => `
-      <div class="note">
+      <div class="note" data-id="${escapeHtml(item.id)}">
         <div class="pin"></div>
         <p class="msg">${escapeHtml(item.pesan)}</p>
         <div class="meta">
@@ -798,15 +881,31 @@
     });
   }
 
+  async function updateAfterChange(){
+    try {
+      const list = await loadMessages();
+      // If messages were added via realtime we already updated DOM incrementally,
+      // but we re-render main state (counts, fullBanner) to be safe.
+      renderMessages(list);
+      updateFormState(list.length);
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
   async function init(){
     buildStars();
     buildDrifters();
     attachTilt();
     attachReveal();
 
+    // Load existing messages and render
     const list = await loadMessages();
     renderMessages(list);
     updateFormState(list.length);
+
+    // Subscribe to realtime updates
+    subscribeRealtime();
   }
 
   form.addEventListener('submit', async (e) => {
@@ -820,6 +919,7 @@
     statusMsg.className = 'status-msg';
 
     try{
+      // Re-check count to avoid exceeding limit
       const current = await loadMessages();
       if (current.length >= MAX_MESSAGES){
         renderMessages(current);
@@ -836,11 +936,14 @@
         waktu: new Date().toISOString()
       };
 
-      const updated = [...current, newEntry];
-      await saveMessages(updated);
+      // Insert to Supabase
+      await insertMessage(newEntry);
 
-      renderMessages(updated);
-      updateFormState(updated.length);
+      // On success:
+      // If realtime works, subscribed clients (including this one) will receive the INSERT event and update the DOM.
+      // To be resilient, we also update locally now:
+      addMessageToDOM(newEntry);
+      updateAfterChange();
       fireConfetti();
 
       namaInput.value = '';
@@ -848,6 +951,7 @@
       statusMsg.textContent = 'Pesan terkirim. Terima kasih!';
       statusMsg.className = 'status-msg ok';
     }catch(err){
+      console.error(err);
       statusMsg.textContent = 'Gagal mengirim pesan, coba lagi.';
       statusMsg.className = 'status-msg error';
     }finally{
@@ -855,27 +959,8 @@
     }
   });
 
+  // Kick off
   init();
-</script// Storage polyfill: fallback ke localStorage bila window.storage tidak ada
-if (!window.storage) {
-  window.storage = {
-    async get(key, _unused) {
-      try {
-        const v = localStorage.getItem(key);
-        return { value: v };
-      } catch (e) {
-        return { value: null };
-      }
-    },
-    async set(key, value, _unused) {
-      try {
-        localStorage.setItem(key, value);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    }
-  };
-}>
+</script>
 </body>
 </html>
