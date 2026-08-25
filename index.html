@@ -575,7 +575,7 @@
     </div>
 
     <h1 class="title">Untuk Kak Salsa</h1>
-    <p class="subtitle">Tulis pesan, doa, atau kenangan yang ingin kamu sampaikan. Setiap pesan yang tertulis di sini bisa dibaca siapa pun yang membuka halaman ini — termasuk Kak Salsa sendiri.</p>
+    <p class="subtitle">Tulis pesan, doa, atau kenangan yang ingin kalian sampaikan, Adib kan banyak salah, minimal minta maaf ya dib. Kalo pesannya agak ngestuck/ga muncul maaf ya ges, ngerjainnya malem-malem dan NGANTUKKKKKKKKKKKKKKKKKK BANGET.</p>
 
     <div class="ring-wrap">
       <svg width="34" height="34" viewBox="0 0 34 34">
@@ -594,7 +594,7 @@
 
   <div class="card reveal" id="formCard">
     <h2>Tulis pesanmu</h2>
-    <p class="hint">Isi namamu dan pesan untuk Kak Salsa. Maksimal 25 pesan bisa ditulis di papan ini.</p>
+    <p class="hint">Isi namamu dan pesan untuk Kak Salsa. Bebas kalian mau nulis apa aja buat Kak Salsa.</p>
 
     <form id="msgForm">
       <div class="field">
@@ -737,25 +737,7 @@
     }catch(e){ return ''; }
   }
 
-  // ---------------- Supabase-backed storage ----------------
-  // REQUIREMENTS (Supabase):
-  // 1) Buat table `messages` dengan kolom: id TEXT PK, nama TEXT, pesan TEXT, waktu TIMESTAMPTZ
-  //    contoh SQL:
-  //      CREATE TABLE messages (
-  //        id text PRIMARY KEY,
-  //        nama text,
-  //        pesan text,
-  //        waktu timestamptz DEFAULT now()
-  //      );
-  //
-  // 2) Pastikan anon key boleh melakukan SELECT dan INSERT:
-  //    - Jika Row Level Security (RLS) diaktifkan, tambahkan policy yang mengizinkan SELECT/INSERT untuk anon.
-  //    - Contoh policy (SQL) bila RLS on:
-  //      ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
-  //      CREATE POLICY "anon_select" ON public.messages FOR SELECT USING (true);
-  //      CREATE POLICY "anon_insert" ON public.messages FOR INSERT WITH CHECK (true);
-  //
-  // Setelah setup, gantikan SUPABASE_URL dan SUPABASE_ANON_KEY di bagian atas file ini.
+
 
   // Load all messages (newest first)
   async function loadMessages(){
