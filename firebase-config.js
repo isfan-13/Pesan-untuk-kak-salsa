@@ -1,5 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
- 
+
+// ⚠️ PENTING: Untuk GitHub Pages production, gunakan GitHub Secrets
+// Untuk development lokal: Buat file .env.local dari .env.example
+
 const firebaseConfig = {
   apiKey: "AIzaSyCeZDeT_FdBExph8BJZCLuV-f40pXSj2v4",
   authDomain: "pesan-c9143.firebaseapp.com",
@@ -9,5 +12,5 @@ const firebaseConfig = {
   appId: "1:235351297757:web:fc06b07db68dfd2fd45534",
   measurementId: "G-W9LJP3KKBK"
 };
- 
+
 export const firebaseApp = initializeApp(firebaseConfig);
