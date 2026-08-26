@@ -1,0 +1,32 @@
+// ============================================
+// FIRESTORE SECURITY RULES
+// ============================================
+// Copy dan paste SEMUA kode di bawah ke:
+// Firebase Console > Firestore Database > Rules tab
+// Lalu klik "Publish"
+// ============================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Koleksi pesan-kak-salsa
+    match /pesan-kak-salsa/{document=**} {
+      // ✅ Siapa saja boleh BACA semua pesan
+      allow read: if true;
+      
+      // ✅ Siapa saja boleh KIRIM pesan BARU
+      // Validasi: nama dan pesan tidak boleh kosong
+      allow create: if request.resource.data.nama != null 
+                      && request.resource.data.nama != ""
+                      && request.resource.data.pesan != null
+                      && request.resource.data.pesan != ""
+                      && request.resource.data.createdAt != null;
+      
+      // ❌ Tidak boleh EDIT pesan lama
+      allow update: if false;
+      
+      // ❌ Tidak boleh HAPUS pesan
+      allow delete: if false;
+    }
+  }
+}
